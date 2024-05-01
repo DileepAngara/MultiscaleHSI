@@ -2,5 +2,5 @@
 
 
 Contributors:
-* Truong Son Hy
-* Phuong Dao
+* Yang Tuang Anh
+* Hy Truong Son (Correspondent / PI)
