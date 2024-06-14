@@ -1,10 +1,17 @@
 # Multiscale spectral graph neural networks for hyperspectral imaging
 
 Contributors:
-* Yang Tuang Anh
+* Yang Tuan Anh
+* Phuong Dao
 * Hy Truong Son (Correspondent / PI)
 
 ## Demo Instructions (not part of final)
+Create virtual environment
+```
+py -m venv .venv
+.venv\Scripts\activate
+```
+
 Installing modules
 ```
 pip install -r requirements.txt
