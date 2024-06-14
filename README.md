@@ -22,9 +22,9 @@ Training
 py src/train.py --out train_results --verbal
 ```
 
-Testing
+Inference
 ```
-py src/test.py --out test_results --verbal --weights output/train_results/gcn_model.pt
+py src/infer.py --out infer_results --verbal --weights output/train_results/gcn_model.pt
 ```
 
 Benchmarking (for 5% training sample, by default)
