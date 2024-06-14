@@ -2,8 +2,10 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from skimage.segmentation import find_boundaries
 import numpy as np
+import os
+import torch
 
-def construct_graph(segments):
+def construct_graph(segments, verbal=False, out=None):
   unique_labels = np.unique(segments)
 
   graph = nx.Graph()
@@ -18,11 +20,16 @@ def construct_graph(segments):
           graph.add_edge(label, neighbor_label)
           graph.add_edge(neighbor_label, label)
 
-  print("Number of nodes:", graph.number_of_nodes())
-  print("Number of edges:", graph.number_of_edges())
-  plt.figure(figsize=(8, 8))
-  nx.draw(graph, node_size=10)
-  plt.title('Graph Representation of Superpixel Segmentation')
-  plt.show()
+  if verbal:
+    print("Graph Construction:")
+    print("==============================")
+    print("Number of nodes:", graph.number_of_nodes())
+    print("Number of edges:", graph.number_of_edges())
 
-  return graph
+    nx.draw(graph, node_size=10)
+    plt.title('Graph Representation of Superpixel Segmentation')
+    filepath = os.path.join(out, "superpixel_graph.png") if out else "superpixel_graph.png"
+    plt.savefig(filepath, bbox_inches='tight')
+    plt.close()
+
+  return torch.tensor(list(graph.edges()), dtype=torch.long).t().contiguous(), graph

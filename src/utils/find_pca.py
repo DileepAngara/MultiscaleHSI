@@ -7,5 +7,4 @@ def find_pca(img, n_components):
   pca = PCA(n_components = n_components)
   reduced_X = pca.fit_transform(X)
   img = reduced_X.reshape((img.shape[0], img.shape[1], reduced_X.shape[1]))
-  print(img.shape)
   return img

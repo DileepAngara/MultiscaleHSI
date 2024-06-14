@@ -4,8 +4,11 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import classification_report
 from sklearn.metrics import cohen_kappa_score
 from sklearn.metrics import balanced_accuracy_score
+import spectral as spy
+import os
+import pandas as pd
 
-def results(seg_map, ground_truth):
+def map_results(seg_map, ground_truth, verbal=False):
   seg_map = np.array(seg_map).flatten()
   ground_truth = np.array(ground_truth).flatten()
 
@@ -13,18 +16,20 @@ def results(seg_map, ground_truth):
   filtered_ground_truth = ground_truth[non_zero_indices]
   filtered_seg_map = seg_map[non_zero_indices]
 
-  print(classification_report(filtered_seg_map, filtered_ground_truth))
+  overall_acc =  accuracy_score(filtered_ground_truth, filtered_seg_map)
+  class_acc = balanced_accuracy_score(filtered_ground_truth, filtered_seg_map)
+  kappa_score = cohen_kappa_score(filtered_ground_truth, filtered_seg_map)
+  report = classification_report(filtered_ground_truth, filtered_seg_map,
+                                 labels=np.unique(filtered_seg_map))
+  if verbal:
+    print(report)
+    print("OA:", overall_acc)
+    print("AA:", class_acc)
+    print("KA:", kappa_score)
 
-  overall_acc =  accuracy_score(filtered_seg_map, filtered_ground_truth)
-  class_acc = balanced_accuracy_score(filtered_seg_map, filtered_ground_truth)
-  kappa_score = cohen_kappa_score(filtered_seg_map, filtered_ground_truth)
+  return overall_acc, class_acc, kappa_score, report
 
-  print("OA:", overall_acc)
-  print("AA:", class_acc)
-  print("KA:", kappa_score)
-  return overall_acc, class_acc, kappa_score
-
-def plot_training_results(EPOCH, loss_history, accuracy_history):
+def plot_training_results(EPOCH, loss_history, accuracy_history, out=None):
   # Create a figure with two subplots
   fig, axs = plt.subplots(1, 2, figsize=(14, 6))
 
@@ -43,4 +48,14 @@ def plot_training_results(EPOCH, loss_history, accuracy_history):
   axs[1].legend()
 
   plt.tight_layout()
-  plt.show()
+  filepath = os.path.join(out, "training_plot.png") if out else "training_plot.png"
+  plt.savefig(filepath, bbox_inches='tight')
+  plt.close()
+
+  df = pd.DataFrame({
+    "epoch": np.arange(len(loss_history))+1,
+    "loss": loss_history,
+    "accuracy": accuracy_history
+  })
+  filepath = os.path.join(out, "training_record.csv") if out else "training_record.csv"
+  df.to_csv(filepath, index_label=False)

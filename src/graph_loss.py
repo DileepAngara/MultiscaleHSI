@@ -1,16 +1,13 @@
-import torch
+from torch_geometric.utils import degree
 import torch.nn as nn
 import torch.nn.functional as F
-import torch_geometric
 
 class GraphLoss(nn.Module):
-    def __init__(self, mu=0.1):
+    def __init__(self, mu=0.01):
         super(GraphLoss, self).__init__()
         self.mu = mu
 
     def forward(self, output, target, data):
-        if data.one_index:
-            target = target - 1
 
         # Supervised node classification loss
         if data.train_mask:
@@ -20,11 +17,15 @@ class GraphLoss(nn.Module):
 
         # Label smoothness regularization
         edge_index = data.edge_index
-        node_preds_log = torch.log_softmax(output, dim=1)
         row, col = edge_index
+
+        # Normalize the output values
+        node_degrees = degree(row, num_nodes=data.x.size(0))
+        output = output / node_degrees.view(-1, 1).sqrt()
+
         diff = output[row] - output[col]
         smoothness_loss = diff.pow(2).mean()
 
-        loss = supervised_loss + self.mu * smoothness_loss
+        loss = supervised_loss + self.mu*smoothness_loss
 
         return loss
