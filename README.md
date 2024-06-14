@@ -4,8 +4,8 @@ Contributors:
 * Yang Tuang Anh
 * Hy Truong Son (Correspondent / PI)
 
-## Demo (not part of final)
-Install modules
+## Demo Instructions (not part of final)
+Installing modules
 ```
 pip install -r requirements.txt
 ```
@@ -20,7 +20,12 @@ Testing
 py src/test.py --out test_results --verbal --weights output/train_results/gcn_model.pt
 ```
 
-Benchmarking
+Benchmarking (for 5% training sample, by default)
 ```
 py src/benchmark.py
+```
+
+Benchmarking (for 10% training sample)
+```
+py src/benchmark.py --train_size 0.1
 ```
