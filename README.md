@@ -17,14 +17,24 @@ Installing modules
 pip install -r requirements.txt
 ```
 
-Training
+Training (GCN)
 ```
-py src/train.py --out train_results --verbal
+py src/gcn_train.py --out gcn_train_results --verbal
 ```
 
-Inference
+Inference (GCN)
 ```
-py src/infer.py --out infer_results --verbal --weights output/train_results/gcn_model.pt
+py src/gcn_infer.py --out gcn_infer_results --verbal --weights output/train_results/gcn_model.pt
+```
+
+Training (MGN)
+```
+py src/mgn_train.py --out mgn_train_results --verbal --num_clusters 16 1
+```
+
+Inference (MGN)
+```
+py src/mgn_infer.py --out mgn_infer_results --verbal --weights output/mgn_train_results/mgn_model.pt --num_clusters 16 1
 ```
 
 Benchmarking (for 5% training sample, by default)
