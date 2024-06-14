@@ -16,6 +16,7 @@ from utils.label_prop_visualization import label_prop_visualization
 from utils.tsne_visualization import tsne_visualization
 from utils.knn_graph_visualization import knn_graph_visualization
 from tqdm import tqdm
+import random
 
 output_dir = "output"
 if not os.path.exists(output_dir):
@@ -51,6 +52,10 @@ def main():
     if not os.path.exists(out):
         os.mkdir(out)
     sys.stdout = open(os.path.join(out, "log.txt"), "w")
+
+    torch.manual_seed(args.seed)
+    random.seed(args.seed)
+    np.random.seed(args.seed)
 
     dataset, ground_truth = load_hsi(dataset=args.dataset)
 

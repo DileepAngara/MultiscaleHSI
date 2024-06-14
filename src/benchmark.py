@@ -14,6 +14,7 @@ from tqdm import tqdm
 from utils.results import map_results
 from training_loop import train, test
 from utils.benchmark_visualization import performance_visualization, class_visualization
+import random
 
 output_dir = "output"
 if not os.path.exists(output_dir):
@@ -113,6 +114,8 @@ def main():
         results = []
         for idx in tqdm(range(args.iters), desc=desc):
             torch.manual_seed(idx)
+            random.seed(idx)
+            np.random.seed(idx)
             oa, aa, ka, report = func()
             results.append([oa, aa, ka, report])
 
