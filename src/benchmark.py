@@ -1,4 +1,7 @@
 from utils.load_hsi import load_hsi
+from utils.train_test_hsi import train_test_hsi
+from utils.feature_initialization import superpixel_classes
+from torch_geometric.nn import LabelPropagation
 from utils.segmentation import segmentation
 from utils.visualization import (
     dataset_visualization,
@@ -170,6 +173,14 @@ def main():
         out,
     )
 
+    train_mask, test_mask = train_test_hsi(
+        ground_truth, args.train_size, args.seed
+    )  # Train-test masking
+
+    y, label_mask = superpixel_classes(
+        segments, ground_truth, train_mask
+    )
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     def print_results(data, desc):
@@ -184,22 +195,13 @@ def main():
         print("Standard Deviations:", std_devs * 100)
 
     def label_prop_benchmark():
-        data = construct_feature_graph(
-            segments,
-            dataset_pca,
-            ground_truth,  # Feature Extraction Pipeline
-            args.train_size,
-            args.seed,
-            args.beta,
-            args.sigma_s,
-            args.knn_k,
-            args.k,
-            verbal=False,
-            out=out,
-        )
+        model = LabelPropagation(num_layers=3, alpha=0.9)
+        with torch.no_grad():
+            out = model(y - 1, data.edge_index, edge_weight=data.edge_attr)
+            label_prop_y = out.argmax(dim=1)
 
         class_map = np.zeros_like(segments, dtype="uint8")
-        labels = data.y.cpu() + 1
+        labels = label_prop_y.cpu() + 1
 
         for label in np.unique(segments):
             class_map[segments == label] = labels[label]

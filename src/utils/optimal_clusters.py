@@ -159,9 +159,7 @@ def multiscale_felzenswalb(
 
 
 def optim_scales_felzenswalb(segments_cluster, segments_results, threshold=0.8):
-    return np.array(
-        [a for (a, b) in zip(segments_cluster, segments_results) if b[0] >= threshold]
-    )
+    return [a for (a, b) in zip(segments_cluster, segments_results) if b[0] >= threshold]
 
 
 def find_valleys(scores):

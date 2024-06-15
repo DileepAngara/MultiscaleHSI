@@ -4,11 +4,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import spectral as spy
 from utils.results import map_results
+from utils.find_pca import find_pca
 import os
 
 
 def segmentation(img, ground_truth, size, verbal=False, out=None):
-    segments = felzenszwalb(img, sigma=0.95, min_size=size, channel_axis=2)
+    img_pca = find_pca(img, 0.999)
+    
+    segments = felzenszwalb(img_pca, sigma=0.95, min_size=size, channel_axis=2)
 
     if verbal:
         false_image = spy.get_rgb(img, [30, 20, 10])
