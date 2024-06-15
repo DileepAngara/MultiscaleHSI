@@ -29,7 +29,7 @@ def test(
         logits = model(data)
         pred = logits.argmax(dim=1)
 
-    cmap = np.zeros_like(segments)
+    cmap = np.zeros_like(segments,dtype='uint8')
     unique_labels = np.unique(segments)
     for label in unique_labels:
         cmap[segments == label] = pred[label]

@@ -7,6 +7,7 @@ from utils.visualization import (
     knn_graph_visualization,
 )
 from utils.construct_feature_graph import construct_feature_graph
+from utils.optimal_clusters import multiscale_felzenswalb, optim_scales_felzenswalb
 from utils.find_pca import find_pca
 from models import MGNN
 from graph_loss import GraphLoss
@@ -98,6 +99,12 @@ def main():
         help="Select optimal clusters with felzenswalb segmentation",
     )
     parser.add_argument(
+        "--felz_num_clusters",
+        type=int,
+        default=10,
+        help="Select number of clusters for optimal felz segmentation",
+    )
+    parser.add_argument(
         "--felz_threshold",
         type=float,
         default=0.8,
@@ -109,6 +116,12 @@ def main():
         help="Select optimal clusters with kmeans clustering",
     )
     parser.add_argument(
+        "--kmeans_num_clusters",
+        type=int,
+        default=10,
+        help="Select number of clusters for optimal kmeans clustering",
+    )
+    parser.add_argument(
         "--kmeans_threshold",
         type=int,
         default=25,
@@ -116,6 +129,10 @@ def main():
     )
 
     args = parser.parse_args()
+
+    assert (
+        args.optimal_clusters_felz is False or args.optimal_clusters_kmeans is False
+    ), "Can't use both optimal scale strategies at once"
 
     id = len(os.listdir(output_dir)) + 1
     out = os.path.join(output_dir, "{}_{}".format(args.out, id))
@@ -136,11 +153,11 @@ def main():
     if args.verbal:
         dataset_visualization(dataset, ground_truth, out=out)
 
-    dataset = find_pca(dataset, 0.999)  # Find PCA
+    dataset_pca = find_pca(dataset, 0.999)  # Find PCA
 
     data = construct_feature_graph(
         segments,
-        dataset,
+        dataset_pca,
         ground_truth,  # Feature Extraction Pipeline
         args.train_size,
         args.seed,
@@ -152,16 +169,40 @@ def main():
         out,
     )
 
+    num_clusters = args.num_clusters
+
+    if args.optimal_clusters_felz:
+        (_, _, segments_cluster, segments_results) = multiscale_felzenswalb(
+            dataset,
+            ground_truth,
+            args.segmentation_size,
+            args.train_size,
+            args.seed,
+            args.beta,
+            args.sigma_s,
+            args.knn_k,
+            args.k,
+            no_clusters = args.felz_num_clusters,
+            threshold = args.felz_threshold,
+            verbal = args.verbal,
+            out=out
+        )
+        num_clusters = optim_scales_felzenswalb(segments_cluster, segments_results)
+
+    print("Learned Scales:")
+    print("==============================")
+    print(num_clusters)
+
     device = torch.device(
         "cuda" if torch.cuda.is_available() else "cpu"
     )  # call model, optimizer, loss function
     model = MGNN(
-        nfeat=dataset.shape[2],
+        nfeat=dataset_pca.shape[2],
         nhid=args.nhid,
         nout=len(np.unique(ground_truth[ground_truth != 0])),
         n_nodes=len(np.unique(segments)),
         dropout=args.dropout,
-        num_clusters=args.num_clusters,
+        num_clusters=num_clusters,
         use_norm=False,
     ).to(device)
 

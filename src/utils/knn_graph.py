@@ -5,10 +5,10 @@ import torch
 
 def knn_graph(edge_index, edge_attr, x, k):
     # Ensure edge_index is undirected
-    edge_index = to_undirected(edge_index)
+    edge_index, edge_attr = to_undirected(edge_index, edge_attr)
 
-    if x.size(0) <= k:
-        return edge_index, edge_attr
+    if x.size(0)-1 < k:
+      return edge_index, edge_attr
 
     # Convert to numpy array
     x_np = x.cpu().numpy()

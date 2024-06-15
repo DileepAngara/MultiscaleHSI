@@ -150,7 +150,7 @@ def main():
             out=out,
         )
 
-        class_map = np.zeros_like(segments)
+        class_map = np.zeros_like(segments,dtype='uint8')
         labels = data.y.cpu() + 1
 
         for label in np.unique(segments):

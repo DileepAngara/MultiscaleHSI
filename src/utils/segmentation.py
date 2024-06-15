@@ -20,7 +20,7 @@ def segmentation(img, ground_truth, size, verbal=False, out=None):
         ax[0].axis("off")
 
         unique_labels = np.unique(segments)
-        seg_map = np.zeros_like(segments)
+        seg_map = np.zeros_like(segments, dtype='uint8')
 
         for label in unique_labels:
             mask = segments == label

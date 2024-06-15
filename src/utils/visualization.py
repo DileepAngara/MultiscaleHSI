@@ -104,7 +104,7 @@ def tsne_visualization(model, data, out):
 
 
 def label_prop_visualization(model, segments, ground_truth, data, out=None):
-    class_map = np.zeros_like(segments)
+    class_map = np.zeros_like(segments,dtype='uint8')
     labels = data.y.cpu() + 1
 
     for label in np.unique(segments):
@@ -134,7 +134,7 @@ def label_prop_visualization(model, segments, ground_truth, data, out=None):
         logits = model(data)
         gnn_labels = logits.argmax(dim=1).cpu() + 1
 
-    gnn_class_map = np.zeros_like(segments)
+    gnn_class_map = np.zeros_like(segments,dtype='uint8')
 
     for label in np.unique(segments):
         gnn_class_map[segments == label] = gnn_labels[label]

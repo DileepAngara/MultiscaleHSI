@@ -151,7 +151,7 @@ def main():
         logits = model(data)
         gnn_labels = logits.argmax(dim=1).cpu() + 1
 
-    inference_class_map = np.zeros_like(segments)
+    inference_class_map = np.zeros_like(segments,dtype='uint8')
 
     for label in np.unique(segments):
         inference_class_map[segments == label] = gnn_labels[label]
