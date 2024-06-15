@@ -1,33 +1,71 @@
 from utils.construct_graph import construct_graph
-from utils.feature_initialization import generate_features, superpixel_classes, generate_weights
+from utils.feature_initialization import (
+    generate_features,
+    superpixel_classes,
+    generate_weights,
+)
 from utils.train_test_hsi import train_test_hsi
 from utils.knn_graph import knn_graph
 from torch_geometric.nn import LabelPropagation
 import torch
 from torch_geometric.data import Data
 
-def construct_feature_graph(segments, dataset, ground_truth, TRAIN_SIZE, SEED, BETA, SIGMA_S, KNN_K, K, verbal=False, out=None):
-  edge_index, graph = construct_graph(segments, verbal, out) # Graph construction (in: segmentation label, out: COO graph)
 
-  mean_features, weighted_features, centroids = generate_features(segments, dataset, K) # Feature initialization
+def construct_feature_graph(
+    segments,
+    dataset,
+    ground_truth,
+    TRAIN_SIZE,
+    SEED,
+    BETA,
+    SIGMA_S,
+    KNN_K,
+    K,
+    verbal=False,
+    out=None,
+):
+    edge_index, graph = construct_graph(
+        segments, verbal, out
+    )  # Graph construction (in: segmentation label, out: COO graph)
 
-  train_mask, test_mask = train_test_hsi(ground_truth, TRAIN_SIZE, SEED) # Train-test masking
+    mean_features, weighted_features, centroids = generate_features(
+        segments, dataset, K
+    )  # Feature initialization
 
-  y, label_mask = superpixel_classes(segments, ground_truth, train_mask) # Initialize node labels
+    train_mask, test_mask = train_test_hsi(
+        ground_truth, TRAIN_SIZE, SEED
+    )  # Train-test masking
 
-  edge_attr = generate_weights(mean_features, # Edge weights
-                              weighted_features,
-                              centroids, edge_index, BETA, SIGMA_S)
+    y, label_mask = superpixel_classes(
+        segments, ground_truth, train_mask
+    )  # Initialize node labels
 
-  edge_index_knn, edge_attr_knn = knn_graph(edge_index, edge_attr, weighted_features, KNN_K) # Create KNN graph
+    edge_attr = generate_weights(
+        mean_features,  # Edge weights
+        weighted_features,
+        centroids,
+        edge_index,
+        BETA,
+        SIGMA_S,
+    )
 
-  model = LabelPropagation(num_layers=3, alpha=0.9)
-  with torch.no_grad():
-    out = model(y-1, edge_index_knn, edge_weight=edge_attr_knn)
-    label_prop_y = out.argmax(dim=1)
+    edge_index_knn, edge_attr_knn = knn_graph(
+        edge_index, edge_attr, weighted_features, KNN_K
+    )  # Create KNN graph
 
-  data = Data(x=weighted_features, edge_index=edge_index_knn, y=label_prop_y,
-              edge_attr=edge_attr_knn, train_mask=label_mask,
-              test_mask=test_mask, one_index=True)
+    model = LabelPropagation(num_layers=3, alpha=0.9)
+    with torch.no_grad():
+        out = model(y - 1, edge_index_knn, edge_weight=edge_attr_knn)
+        label_prop_y = out.argmax(dim=1)
 
-  return data
+    data = Data(
+        x=weighted_features,
+        edge_index=edge_index_knn,
+        y=label_prop_y,
+        edge_attr=edge_attr_knn,
+        train_mask=label_mask,
+        test_mask=test_mask,
+        one_index=True,
+    )
+
+    return data

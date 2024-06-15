@@ -2,18 +2,19 @@ from torch_geometric.utils import to_undirected
 from sklearn.neighbors import NearestNeighbors
 import torch
 
+
 def knn_graph(edge_index, edge_attr, x, k):
     # Ensure edge_index is undirected
     edge_index = to_undirected(edge_index)
 
     if x.size(0) <= k:
-      return edge_index, edge_attr
+        return edge_index, edge_attr
 
     # Convert to numpy array
     x_np = x.cpu().numpy()
 
     # Use sklearn's NearestNeighbors to find k nearest neighbors
-    nbrs = NearestNeighbors(n_neighbors=k, algorithm='ball_tree').fit(x_np)
+    nbrs = NearestNeighbors(n_neighbors=k, algorithm="ball_tree").fit(x_np)
     distances, indices = nbrs.kneighbors(x_np)
 
     # Convert indices to PyTorch tensor
