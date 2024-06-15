@@ -7,7 +7,7 @@ from utils.visualization import (
     knn_graph_visualization,
 )
 from utils.construct_feature_graph import construct_feature_graph
-from utils.optimal_clusters import multiscale_felzenswalb, optim_scales_felzenswalb
+from utils.optimal_clusters import multiscale_felzenswalb, optim_scales_felzenswalb, optim_scale_kmeans
 from utils.find_pca import find_pca
 from models import MGNN
 from graph_loss import GraphLoss
@@ -118,13 +118,13 @@ def main():
     parser.add_argument(
         "--kmeans_num_clusters",
         type=int,
-        default=10,
+        default=5,
         help="Select number of clusters for optimal kmeans clustering",
     )
     parser.add_argument(
         "--kmeans_threshold",
         type=int,
-        default=25,
+        default=20,
         help="Select threshold for optimal kmeans clustering",
     )
 
@@ -188,7 +188,24 @@ def main():
             out=out
         )
         num_clusters = optim_scales_felzenswalb(segments_cluster, segments_results)
-
+    elif args.optimal_clusters_kmeans:
+        (_, _, segments_cluster, _) = optim_scale_kmeans(
+            dataset,
+            ground_truth,
+            args.segmentation_size,
+            args.train_size,
+            args.seed,
+            args.beta,
+            args.sigma_s,
+            args.knn_k,
+            args.k,
+            no_clusters = args.kmeans_num_clusters,
+            threshold = args.kmeans_threshold,
+            verbal = args.verbal,
+            out=out
+        )
+        num_clusters = segments_cluster
+        
     print("Learned Scales:")
     print("==============================")
     print(num_clusters)

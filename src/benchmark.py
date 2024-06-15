@@ -5,9 +5,14 @@ from utils.visualization import (
     performance_visualization,
     class_visualization,
 )
+from utils.optimal_clusters import (
+    multiscale_felzenswalb,
+    optim_scales_felzenswalb,
+    optim_scale_kmeans,
+)
 from utils.construct_feature_graph import construct_feature_graph
 from utils.find_pca import find_pca
-from models import GCN
+from models import GCN, MGNN
 from graph_loss import GraphLoss
 import torch
 import os
@@ -83,6 +88,49 @@ def main():
     parser.add_argument(
         "--epochs", type=int, default=200, help="Select number of epochs"
     )
+
+    parser.add_argument(
+        "--num_clusters",
+        type=int,
+        nargs="*",
+        default=[10, 5],
+        help="Select learned resolutions (default is [10, 5])",
+    )
+    parser.add_argument(
+        "--optimal_clusters_felz",
+        action="store_true",
+        help="Select optimal clusters with felzenswalb segmentation",
+    )
+    parser.add_argument(
+        "--felz_num_clusters",
+        type=int,
+        default=10,
+        help="Select number of clusters for optimal felz segmentation",
+    )
+    parser.add_argument(
+        "--felz_threshold",
+        type=float,
+        default=0.8,
+        help="Select threshold for optimal felz segmentation",
+    )
+    parser.add_argument(
+        "--optimal_clusters_kmeans",
+        action="store_true",
+        help="Select optimal clusters with kmeans clustering",
+    )
+    parser.add_argument(
+        "--kmeans_num_clusters",
+        type=int,
+        default=5,
+        help="Select number of clusters for optimal kmeans clustering",
+    )
+    parser.add_argument(
+        "--kmeans_threshold",
+        type=int,
+        default=20,
+        help="Select threshold for optimal kmeans clustering",
+    )
+
     parser.add_argument(
         "--iters", type=int, default=10, help="Select number of iterations"
     )
@@ -106,11 +154,11 @@ def main():
     if args.verbal:
         dataset_visualization(dataset, ground_truth, out=out)
 
-    dataset = find_pca(dataset, 0.999)  # Find PCA
+    dataset_pca = find_pca(dataset, 0.999)  # Find PCA
 
     data = construct_feature_graph(
         segments,
-        dataset,
+        dataset_pca,
         ground_truth,
         args.train_size,
         args.seed,
@@ -138,7 +186,7 @@ def main():
     def label_prop_benchmark():
         data = construct_feature_graph(
             segments,
-            dataset,
+            dataset_pca,
             ground_truth,  # Feature Extraction Pipeline
             args.train_size,
             args.seed,
@@ -150,7 +198,7 @@ def main():
             out=out,
         )
 
-        class_map = np.zeros_like(segments,dtype='uint8')
+        class_map = np.zeros_like(segments, dtype="uint8")
         labels = data.y.cpu() + 1
 
         for label in np.unique(segments):
@@ -160,7 +208,7 @@ def main():
 
     def gcn_benchmark():
         model = GCN(
-            nfeat=dataset.shape[2],
+            nfeat=dataset_pca.shape[2],
             nhid=args.nhid,
             nout=len(np.unique(ground_truth[ground_truth != 0])),
             n_nodes=len(np.unique(segments)),
@@ -181,26 +229,111 @@ def main():
 
         return test(model, device, segments, ground_truth, data, verbal=False)
 
-    def benchmark(func, desc, name):
+    def mgn_benchmark(num_clusters):
+        model = MGNN(
+            nfeat=dataset_pca.shape[2],
+            nhid=args.nhid,
+            nout=len(np.unique(ground_truth[ground_truth != 0])),
+            n_nodes=len(np.unique(segments)),
+            dropout=args.dropout,
+            num_clusters=num_clusters,
+            use_norm=False,
+        ).to(device)
+
+        optimizer = torch.optim.Adam(model.parameters())
+        criterion = GraphLoss()
+
+        for layer in model.children():  # reset weights
+            if hasattr(layer, "reset_parameters"):
+                layer.reset_parameters()
+
+        for epoch in range(
+            args.epochs + 1
+        ):  # train, test loop (in: graph of each band: out: loss, acc)
+            loss = train(model, device, optimizer, criterion, data)
+
+        return test(model, device, segments, ground_truth, data, verbal=False)
+
+    def benchmark(func, desc, name, num_clusters = None):
         results = []
         for idx in tqdm(range(args.iters), desc=desc):
             torch.manual_seed(idx)
             random.seed(idx)
             np.random.seed(idx)
-            oa, aa, ka, report = func()
+            if num_clusters is None:
+                oa, aa, ka, report = func()
+            else:
+                oa, aa, ka, report = func(num_clusters)
             results.append([oa, aa, ka, report])
 
         print_results(results, name)
+        if num_clusters: print("Clusters:", num_clusters)
         return results
 
     label_prop_results = benchmark(
-        label_prop_benchmark, "Benchmarking Label Propagation:", "Label Prop results"
+        label_prop_benchmark, "Benchmarking Label Propagation", "Label Prop results"
     )
-    gcn_results = benchmark(gcn_benchmark, "Benchmarking GCN:", "GCN results")
+    gcn_results = benchmark(gcn_benchmark, "Benchmarking GCN", "GCN results")
+
+    no_classes = len(np.unique(ground_truth[ground_truth != 0]))
+    num_classes = [no_classes, 1]
+
+    (_, _, segments_cluster, segments_results) = multiscale_felzenswalb(
+        dataset,
+        ground_truth,
+        args.segmentation_size,
+        args.train_size,
+        args.seed,
+        args.beta,
+        args.sigma_s,
+        args.knn_k,
+        args.k,
+        no_clusters=args.felz_num_clusters,
+        threshold=args.felz_threshold,
+        verbal=args.verbal,
+        out=out,
+    )
+    num_clusters_felz = optim_scales_felzenswalb(segments_cluster, segments_results)
+
+    (_, _, segments_cluster, _) = optim_scale_kmeans(
+        dataset,
+        ground_truth,
+        args.segmentation_size,
+        args.train_size,
+        args.seed,
+        args.beta,
+        args.sigma_s,
+        args.knn_k,
+        args.k,
+        no_clusters=args.kmeans_num_clusters,
+        threshold=args.kmeans_threshold,
+        verbal=args.verbal,
+        out=out,
+    )
+    num_clusters_kmeans = segments_cluster
+
+    mgn_results = benchmark(
+        mgn_benchmark, "Benchmarking MGN", "MGN results", num_classes
+    )
+    mgn_felz_results = benchmark(
+        mgn_benchmark,
+        "Benchmarking MGN (Felzenswalb Strategy)",
+        "MGN Felz results",
+        num_clusters_felz
+    )
+    mgn_kmeans_results = benchmark(
+        mgn_benchmark,
+        "Benchmarking MGN (Kmeans Strategy)",
+        "MGN Kmeans results",
+        num_clusters_kmeans
+    )
 
     data = {
         "Label Propagation": label_prop_results,
         "GCN": gcn_results,
+        "MGN": mgn_results,
+        "MGN (Felzenswalb Strategy)": mgn_felz_results,
+        "MGN (Kmeans Strategy)": mgn_kmeans_results,
     }
 
     print("Model Comparison")
