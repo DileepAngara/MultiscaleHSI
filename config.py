@@ -1,0 +1,16 @@
+DATA_PATH = "data"
+RESULTS_PATH = "output"
+
+SEED = 42 
+TRAIN_SIZE = 0.05
+
+SIGMA_S = 0.2
+KNN_K = 8
+K = 15
+BETA = 0.9 
+
+NHID = 128 
+DROPOUT = 0.5
+EPOCH = 200
+
+ITER = 10

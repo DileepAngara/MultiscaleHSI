@@ -17,42 +17,42 @@ Installing modules
 pip install -r requirements.txt
 ```
 
-Training (GCN)
+Load Experiments with Training (GCN)
 ```bash
-py src/gcn_train.py --out gcn_train_results --verbal
+py experiment_gcn.py --dataset INDIAN --segmentation_size 10 --training
+```
+
+Load Experiments without Training, assuming trained before (GCN)
+```bash
+py experiment_gcn.py --dataset INDIAN --segmentation_size 10
 ```
 
 Inference (GCN)
 ```bash
-py src/gcn_infer.py --out gcn_infer_results --verbal --weights output/train_results/gcn_model.pt
+py inference_gcn.py ---dataset INDIAN --segmentation_size 10 --weights_path output/INDIAN/experiment/gcn_model.pth --output_path output/INDIAN
 ```
 
-Training (MGN)
+Load Experiments with Training (MOB-GCN)
 ```bash
-py src/mgn_train.py --out mgn_train_results --verbal --num_clusters 16 1
+py experiment_mgn.py --dataset INDIAN --segmentation_size 10 --training
 ```
 
-Training (MGN) with optimal scale selection
+Load Experiments without Training, assuming trained before (MOB-GCN)
 ```bash
-py src/mgn_train.py --out mgn_train_results --verbal --optimal_clusters_felz
+py experiment_mgn.py --dataset INDIAN --segmentation_size 10
 ```
 
-Training (MGN) with optimal scale selection and parameters
+Find optimal scales for MOB-GCN inference
 ```bash
-py src/mgn_train.py --out mgn_train_results --verbal --optimal_clusters_felz --felz_num_clusters 10 --felz_threshold 0.8
+py optimal_scale.py --dataset INDIAN --segmentation_size 10
 ```
 
-Inference (MGN)
+Inference (MOB-GCN)
 ```bash
-py src/mgn_infer.py --out mgn_infer_results --verbal --weights output/mgn_train_results/mgn_model.pt --num_clusters 16 1
+py inference_mgn.py ---dataset INDIAN --segmentation_size 10 --weights_path output/INDIAN/experiment/gcn_model.pth --output_path output/INDIAN --num_clusters 33,28,22,13,4
 ```
 
-Benchmarking (for 5% training sample, by default)
+Benchmarking GCN, MOB-GCN (with `num_classes`) and MOB-GCN (with optimal scales)
 ```bash
-py src/benchmark.py
-```
-
-Benchmarking (for 10% training sample)
-```bash
-py src/benchmark.py --train_size 0.1
+py benchmark.py --dataset INDIAN --segmentation_size 10 --sample_size 0.05 --num_clusters 33,28,22,13,4
 ```
