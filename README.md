@@ -2,5 +2,6 @@
 
 
 Contributors:
-* Truong Son Hy
+* Tuan-Anh Yang
+* Truong-Son Hy
 * Phuong Dao
