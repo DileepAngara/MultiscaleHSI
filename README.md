@@ -4,8 +4,8 @@
 
 # Contributors:
 * Tuan-Anh Yang
-* Truong-Son Hy
-* Phuong Dao
+* Truong-Son Hy (PI)
+* Phuong Dao (PI)
 
 # Data
 We use six benchmark HSI datasets to evaluate our approach, which have the following characteristics. INDIAN, SALINAS, PAVIA, BOTSWANA, KENNEDY can be found at [Hyperspectral Remote Sensing Scenes](https://www.ehu.eus/ccwintco/index.php/Hyperspectral_Remote_Sensing_Scenes) and TORONT (UT-HSI-301) can be found at [University of Toronto HSI-301 Dataset](http://vclab.science.uoit.ca/datasets/ut-hsi301/).
