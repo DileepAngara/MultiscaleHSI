@@ -1,4 +1,4 @@
-# MOB-GCN: Multiscale Object-Based Graph Neural Network for Hyperspectral Image Segmentation and Glassification
+# MOB-GCN: Multiscale Object-Based Graph Neural Network for Hyperspectral Image Segmentation and Classification
 
 ![MOB-GCN Architecture](architecture.png)
 
