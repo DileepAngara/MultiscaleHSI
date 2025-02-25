@@ -2,6 +2,8 @@
 
 ![MOB-GCN Architecture](architecture.png)
 
+Paper: https://arxiv.org/abs/2502.16289
+
 # Contributors:
 * Tuan-Anh Yang
 * Truong-Son Hy (PI)
@@ -66,3 +68,15 @@ py benchmark.py --dataset INDIAN --segmentation_size 10 --sample_size 0.05 --num
 ```
 
 # Citation
+
+```bibtex
+@misc{yang2025mobgcnnovelmultiscaleobjectbased,
+      title={MOB-GCN: A Novel Multiscale Object-Based Graph Neural Network for Hyperspectral Image Classification}, 
+      author={Tuan-Anh Yang and Truong-Son Hy and Phuong D. Dao},
+      year={2025},
+      eprint={2502.16289},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2502.16289}, 
+}
+```
