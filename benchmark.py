@@ -156,8 +156,8 @@ def main():
 
     for seg_map in gcn_seg_map_list:
         oa, aa, ka, report, matrix = map_results(seg_map, ground_truth)
+        gcn_results.append([oa, aa, ka, report, matrix])
 
-    gcn_results.append([oa, aa, ka, report, matrix])
 
     gcn_metrics_results = np.array([[oa, aa, ka] for oa, aa, ka, _, _ in gcn_results])
     means = np.mean(gcn_metrics_results.astype(np.double).T, axis=1)
@@ -188,7 +188,7 @@ def main():
             model = MGNN(nfeat = NFEAT,
                 nhid = NHID,
                 nout = NOUT,
-                dropout = DROPOUT, num_clusters = [NOUT]).to(device)
+                dropout = DROPOUT, num_clusters = OPTIMAL_CLUSTERS).to(device)
 
             optimizer = torch.optim.Adam(model.parameters())
             criterion = GraphLoss()
@@ -211,8 +211,7 @@ def main():
 
     for seg_map in mgn_seg_map_list:
         oa, aa, ka, report, matrix = map_results(seg_map, ground_truth)
-
-    mgn_results.append([oa, aa, ka, report, matrix])
+        mgn_results.append([oa, aa, ka, report, matrix])
 
     mgn_metrics_results = np.array([[oa, aa, ka] for oa, aa, ka, _, _ in mgn_results])
     means = np.mean(mgn_metrics_results.astype(np.double).T, axis=1)
@@ -266,8 +265,7 @@ def main():
 
     for seg_map in mgn_opt_seg_map_list:
         oa, aa, ka, report, matrix = map_results(seg_map, ground_truth)
-
-    mgn_opt_results.append([oa, aa, ka, report, matrix])
+        mgn_opt_results.append([oa, aa, ka, report, matrix])
 
     mgn_opt_metrics_results = np.array([[oa, aa, ka] for oa, aa, ka, _, _ in mgn_opt_results])
     means = np.mean(mgn_opt_metrics_results.astype(np.double).T, axis=1)
