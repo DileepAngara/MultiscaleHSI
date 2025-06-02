@@ -66,7 +66,7 @@ def inference():
     # Initialize the model with the same architecture used for training
     NOUT = len(np.unique(ground_truth[ground_truth != 0]))
     
-    if args.num_clusters:
+    '''if args.num_clusters:
         NUM_CLUSTERS = list(map(int, args.num_clusters.split(',')))
     else:
         NUM_CLUSTERS = [NOUT]
@@ -74,11 +74,29 @@ def inference():
     model = MGNN(nfeat=data.num_node_features,
                 nhid=NHID,
                 nout=NOUT,
-                dropout = DROPOUT, num_clusters = NUM_CLUSTERS).to(device)
+                dropout = DROPOUT, num_clusters = NUM_CLUSTERS).to(device)'''
 
-    # Load model weights
+    # Load checkpoint dictionary
     print(f"Loading model weights from {args.weights_path}")
-    model.load_state_dict(torch.load(args.weights_path, weights_only=True))
+    checkpoint = torch.load(args.weights_path)
+
+    # Load num_clusters from file if not passed in args
+    if args.num_clusters:
+      NUM_CLUSTERS = list(map(int, args.num_clusters.split(',')))
+    else:
+      NUM_CLUSTERS = checkpoint["num_clusters"]
+
+    # Rebuild model using correct architecture
+    model = MGNN(
+            nfeat=data.num_node_features,
+            nhid=NHID,
+            nout=NOUT,
+            dropout=DROPOUT,
+            num_clusters=NUM_CLUSTERS
+    ).to(device)
+
+    # Now load the weights safely
+    model.load_state_dict(checkpoint["model_state_dict"])
 
     # Perform inference
     model.eval()
