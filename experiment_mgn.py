@@ -148,7 +148,10 @@ def main():
                 logging.info(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Accuracy: {acc:.4f}')
 
         logging.info(f'Saving model to {os.path.join(EXPERIMENT_RESULT_PATH, "mgn_model.pth")}')
-        torch.save(model.state_dict(), os.path.join(EXPERIMENT_RESULT_PATH, "mgn_model.pth"))
+        torch.save({
+                  "model_state_dict": model.state_dict(),
+                  "num_clusters": NUM_CLUSTERS
+        },os.path.join(EXPERIMENT_RESULT_PATH, "mgn_model.pth"))
         torch.save(optimizer.state_dict(), os.path.join(EXPERIMENT_RESULT_PATH, "mgn_optimizer.pth"))
         np.save(os.path.join(EXPERIMENT_RESULT_PATH, "mgn_loss_history.npy"), loss_history)
         np.save(os.path.join(EXPERIMENT_RESULT_PATH, "mgn_acc_history.npy"), acc_history)
